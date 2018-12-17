@@ -1,13 +1,13 @@
+import logging
+import time
 from collections import namedtuple
 from functools import lru_cache
-
-from PyCRC.CRC16Kermit import CRC16Kermit
 from itertools import zip_longest
-import serial
-import time
-import logging
 
-logger = logging.getLogger('app')
+import serial
+from PyCRC.CRC16Kermit import CRC16Kermit
+
+logger = logging.getLogger('ccnet')
 
 
 def grouper(iterable, n, fillvalue=None):
