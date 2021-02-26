@@ -15,7 +15,7 @@ from ccnet_prot import SmValidator
 if __name__ == '__main__':
 
     logger.info('Starting')
-    device = SmValidator(port='/dev/ttyUSB0')
+    device = SmValidator(port='/dev/ttyS7')
     device.get_bills(500)
     logger.info('Init device done')
 
