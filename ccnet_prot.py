@@ -7,6 +7,9 @@ from itertools import zip_longest
 import serial
 from PyCRC.CRC16Kermit import CRC16Kermit
 
+
+# Translated using Bing Translator from original Russian
+
 logger = logging.getLogger('ccnet')
 
 
@@ -21,7 +24,7 @@ def grouper(iterable, n, fillvalue=None):
 
 class CashCodeNETCommand:
     """
-    Класс команд протокола CCNET. Формирует команды, есть метод для валидации.
+    CCNET command class. Forms commands, there is a method for validation.
     """
     SYNC = 0x02
     ADR = 0x03
@@ -53,9 +56,9 @@ class CashCodeNETCommand:
     @classmethod
     def validate_message(cls, message: bytes) -> bool:
         """
-        Валидация сообщения на соответствие схемы описанной в протоколе.
-        :param message: сообщение в байтах
-        :return: сообщение построено верно - True, в противном случае - False
+        Validation of the message to match the scheme described in the protocol.
+        :param message: message in bytes
+        :return: message built right - True, Otherwise, - False
         """
         result = message[0] == cls.SYNC and message[1] == cls.ADR and message[2] == len(message) and \
                message[-2:] == bytes(cls.get_crc(tuple(message[:-2])))
@@ -67,18 +70,18 @@ class CashCodeNETCommand:
     @staticmethod
     def get_lng(message_data: tuple) -> int:
         """
-        Длинна сообщения. Смотри build_message / Message format
-        :param message_data: data сообщения
-        :return: количество байт правильно построенного сообщения с переданной message_data
+        Long messages. Look build_message / Message format
+        :param message_data: data Messages
+        :return: the number of bytes of a properly constructed message from the sent message message_data
         """
         return 1 + 1 + 1 + 1 + len(message_data) + 2
 
     @staticmethod
     def get_crc(message_body: tuple) -> tuple:
         """
-        Контрольная сумма 16 бит. Порождаемый полином: 0x08408 Пример расчета на стр. 10
-        :param message_body: Сообщение для передачи (без последних двух байт, их и считаем)
-        :return: два байта расчитанной суммы
+        The control amount is 16 bits. Polyn-generated: 0x08408 Example of calculation on page 10
+        :param message_body: Message to transmit (without the last two bytes, and believe them)
+        :return: two bytes of the calculated amount
         """
         crc_int = CRC16Kermit().calculate(bytes(message_body))
         crc_b = crc_int.to_bytes(2, byteorder='big')
@@ -86,60 +89,60 @@ class CashCodeNETCommand:
 
     @classmethod
     def get_ack(cls):
-        """Сообщение: подтверждение"""
+        """Message: Confirmation"""
         return cls().build_message(cls.ACK)
 
     @classmethod
     def get_cmd_reset(cls):
-        """Сообщение: сброс устройства, стр. 17"""
+        """Message: reset the device, page. 17"""
         return cls().build_message(cls.RESET)
 
     @classmethod
     def get_cmd_poll(cls):
-        """Сообщение: опрос устройства, стр. 18"""
+        """Message: Device survey, page 3 18"""
         return cls().build_message(cls.POLL)
 
     @classmethod
     def get_cmd_get_bill_table(cls):
-        """Сообщение: запрос принимаемых банкнот, стр. 26"""
+        """Message: request for accepted banknotes, p. 26"""
         return cls().build_message(cls.GET_BILL_TABLE)
 
     @classmethod
     def get_cmd_enable_bill_types(cls, data: tuple):
         """
-        Сообщение: разрешить/запретить тип принимаемых банкнот, стр. 20 из возможных (тех что вернул ответ на
-            GET_BILL_TABLE) 3 байта + включить/выключить временное хранение банкнот (escrow) 3 байта.
+        Message: to allow/prohibit the type of banknotes accepted, p. 20 possible (those that returned the answer to the
+            GET_BILL_TABLE) 3 byte - turn on/off temporary storage of banknotes (escrow) 3 Bytes.
 
-        :param data: кортеж из 6 интов 1 байт длиной каждый
+        :param data: a motorcade of 6 ints 1 byte long each
         """
         return cls().build_message(cls.ENABLE_BILL_TYPES, data)
 
     @classmethod
     def get_cmd_stack(cls):
-        """Сообщение: отправить банкноту в кассету (при включенном escrow), стр. 21"""
+        """Message: send the banknote to the cassette (with escrow included), p. 21"""
         return cls().build_message(cls.STACK)
 
     @classmethod
     def get_cmd_power_recovery(cls):
-        """Сообщение: включись, стр. 26"""
+        """Message: Switch on, p. 26"""
         return cls().build_message(cls.POWER_RECOVERY)
 
     @classmethod
     def get_cmd_get_CRC_32(cls):
-        """Сообщение: получить контрольную сумму прошивки, стр. 25"""
+        """Message: get a firmware checklist, p. 25"""
         return cls().build_message(cls.GET_CRC32)
 
     @classmethod
     def get_cmd_identification(cls):
-        """Сообщение: получить сведения об устройстве, стр. 21"""
+        """Message: Get information about the device, p. 21"""
         return cls().build_message(cls.IDENTIFICATION)
 
 
 class CashCodeNETResponse:
     """
-    Класс ответов протокола CCNET.
+    Protocol Response Class CCNET.
     """
-    poll_states = {  # стр. 19
+    poll_states = {  # page 19
         0x0: 'response_error',
         0x10: 'power_up',
         0x13: 'initialize',
@@ -170,7 +173,7 @@ class CashCodeNETResponse:
         0x82: 'returned'
     }
 
-    reject_reason = {  # стр.19
+    reject_reason = {  # p.19
         0x60: 'Rejecting due to Insertion. Insertion error',
         0x61: 'Rejecting due to Magnetic. Magnetic error',
         0x62: 'Rejecting due to bill Remaining in the head. Bill remains in the head, and new bill is rejected',
@@ -183,14 +186,14 @@ class CashCodeNETResponse:
         0x6C: 'Rejecting due to Length. Length error',
     }
 
-    response = namedtuple('Response', ['state', 'data', 'reason'])  # это возвращает get_poll
+    response = namedtuple('Response', ['state', 'data', 'reason'])  # it brings back get_poll
 
     @staticmethod
     def validate_response(response: bytes):
         """
-        Валидация сообщения - ответа от устройства
-        :param response: ответ, в байтах
-        :return: сообщение построено верно - True, в противном случае - False
+        Validation of message - response from device
+        :param response: answer, in bytes
+        :return: message built right - True, Otherwise, - False
         """
         if not response:
             return False
@@ -199,10 +202,10 @@ class CashCodeNETResponse:
     @classmethod
     def get_bill_table(cls, response: bytes):
         """
-        Парсит ответ на GET BILL TABLE (0x41, стр. 26)
-        :param response: ответ, в байтах
-        :return: список словарей с значением принимаемой купюры и ее кодом страны. Длина списка 24, при включении/
-            выключении принимаемых типов, при указании какая банкнота идентифицирована передается индекс из этого списка
+        Parsit's response GET BILL TABLE (0x41, Page. 26)
+        :param response: answer, in bytes
+        :return: list of dictionaries with the value of the accepted bill and its country code. List length 24, when included/
+            turning off the types of accepted, when specifying which banknote is identified, the index is transferred from that list
         """
         if not cls.validate_response(response):
             logger.error('Bad response in get_bill_table')
@@ -224,12 +227,12 @@ class CashCodeNETResponse:
     @classmethod
     def get_poll(cls, response: bytes):
         """
-         Парсит ответ на POLL (0x33, стр. 18)
-         :param response: ответ, в байтах
+         Parsit's response POLL (0x33, Page. 18)
+         :param response: answer, in bytes
          :return: self.response:
-            state: состояние в котором находится устройство. Использует self.poll_states
-            data: body (часть содержащая данные) сообщения
-            reason: причина перехода, если есть. Использует self.reject_reason
+            state: State of the device. Uses self.poll_states
+            data: body (part of the data-) messages
+            reason: reason to move, if there is one. Uses self.reject_reason
          """
         if not cls.validate_response(response):
             response_body = b'\x00'
@@ -243,22 +246,22 @@ class CashCodeNETResponse:
 
 
 class CashCodeSM:
-    """Класс объединяющий команды и ответы протокола"""
+    """Team-pool class and protocol responses"""
     command_class = CashCodeNETCommand
     response_class = CashCodeNETResponse
 
     def __init__(self, enabled_bill=(), port='/dev/ttyUSB0', baud_rate=9600, timeout=1):
         """
-        :param enabled_bill: принимаемые банкноты, например: (100, 200, 1000)
-        :param port: COM port к которому подключено устройство
-        :param timeout: время ожидания ответа от устройства
+        :param enabled_bill: banknotes, such as banknotes: (100, 200, 1000)
+        :param port: COM port to which the device is connected
+        :param timeout: Time to wait for a response from the device
 
-        Параметры подключения (стр.9):
-            скорость: 9600/19200, выбирается на устройстве,
-            стартовый бит: 1,
-            размер слова: 8 бит, 0 бит передается первым,
-            четность: не проверяется,
-            стоп бит: 1.
+        Connectivity options (Page.9):
+            Speed: 9600/19200, selected on the device,
+            Start Bit: 1,
+            Word size: 8 Bit, 0 bit is transmitted first,
+            Parity: Not checked,
+            stop bit: 1.
         """
         self.serial = serial.Serial(port=port, baudrate=baud_rate, timeout=timeout, writeTimeout=timeout,
                                     stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE)
@@ -277,13 +280,13 @@ class CashCodeSM:
 
     def enable_bill_types(self, code='RUS'):
         """
-        Включить к оплате, стр. 20
-        self.enabled_bill: список значений купюр, в рублях. Например: (50, 100, 500) Купюры вне этого списка приниматься
-            не будут, даже если будут распознаны.
-        self.bill_table: список купюр из прошивки валидатора. Длина строго 24!
+        Include to pay, page. 20
+        self.enabled_bill: list of banknote values, in rubles. For example: (50, 100, 500) Notes outside this list are accepted
+            will not, even if they are recognized.
+        self.bill_table: list of bills from the validator firmware. Length Strictly 24!
         """
         self.bill_table = self.response_class.get_bill_table(self.get_bill_table())
-        escrow_enable = [0x00, 0x00, 0x00]  # выключаю escrow, купюры сразу идут в кассету
+        escrow_enable = [0x00, 0x00, 0x00]  # I turn off the escrow, the bills go straight into the cassette
 
         enable_types = 0
         for bit_num in range(3 * 8):
@@ -298,15 +301,15 @@ class CashCodeSM:
         return self.send_cmd(self.command_class.get_cmd_enable_bill_types(tuple(result)))
 
     def disable_bill_types(self):
-        """Перевести валидатор в состояние 'disabled' (горит красный диод, деьги не принимает)"""
+        """Transfer the validator to the state of 'disabled' (red diode burns, degy does not accept)"""
         return self.send_cmd(self.command_class.get_cmd_enable_bill_types((0x00, 0x00, 0x00, 0x00, 0x00, 0x00)))
 
     def stack(self):
-        """Отправить купюру в кассету"""
+        """Send the bill to the cassette"""
         return self.send_cmd(self.command_class.get_cmd_stack())
 
     def reset(self):
-        """Reset. Устройство завершит выполняемую операцию и перезагрузится"""
+        """Reset. The device will complete the operation and restart"""
         return self.send_cmd(self.command_class.get_cmd_reset(), confirmation=False)
 
     def power_recovery(self):
@@ -317,10 +320,10 @@ class CashCodeSM:
 
     def send_cmd(self, command: tuple, confirmation=True) -> bytes:
         """
-        Отправка команды на устройство
-        :param command: команда для отправки; будет отправлена как есть, модификаций/проверок проводится не будет
-        :param confirmation: подтверждение принятия ответа, True - нужно, False - нет
-        :return: байты ответа устройства
+        Sending commands to your device
+        :param command: Command to send will be sent as is, modifications/checks will not be carried out
+        :param confirmation: Confirmation of the response, True - yes, False - no
+        :return: device response bytes
         """
         self._send_command(command)
         response = self._get_response()
@@ -337,12 +340,12 @@ class CashCodeSM:
 
     def _get_response(self) -> bytes:
         """
-        Получить ответ, сначала пытаюсь получить первые три байта, в третьем байте находится количество байт в
-            сообщении, затем получаю указанное количество без трех, который уже получены
-        :return: ответ устройства
+        Get an answer, first I try to get the first three bytes, in the third byte is the number of bytes in
+            message, then receive a specified number without three, which has already been received
+        :return: Device response
         """
         first_three = self.serial.read(3)
-        if not first_three:  # не ответил
+        if not first_three:  # didn't answer
             return first_three
 
         other = self.serial.read(first_three[2] - 3)
@@ -355,27 +358,27 @@ class CashCodeSM:
 
 class SmValidator:
     """
-    Класс для работы с валидатором по протоколы CCNET.
-    Имеет два метода для управления:
-        get_bills - для получения денег.
-            Return: False - валидатор уже активен, иначе True
-        turn_off - перевод в состояние ожидания
-            Return: сумма, полученная пока валидатор был активен
+    Class to work with validator by protocols CCNET.
+    It has two methods to control:
+        get_bills - to get money.
+            Return: False - Validator is already active, otherwise True
+        turn_off - Put to a waiting state
+            Return: amount received while the validator has been active
 
-    Обратная связь на колбэках, которые вызываются при наступлении следующих событий:
-        callback_get_bills_done - получена сумма не меньше запрашиваемой в get_bills.
-            Аргументы:
-                полученная сумма
-        callback_timeout - был вызван get_bills, но в течении времени указанной в timeout запрошенная сумма не набралась
-            Аргументы:
-                сумма, полученная пока валидатор был активен
-        callback_bill_stacked - банкнота попала в кассету
-            Аргументы:
-                номинал банкноты
-        callback_cassette_removed - демонтирована кассета. Вызовется один раз
-            Без аргументов.
+    Feedback on callbacks that are called at the events:
+        callback_get_bills_done - received the amount at least get_bills.
+            Arguments:
+                Amount received
+        callback_timeout - get_bills was called, but during the timeout time stated, the amount requested did not gain
+            Arguments:
+                amount received while the validator has been active
+        callback_bill_stacked - the banknote was in the cassette
+            Arguments:
+                denomination banknotes
+        callback_cassette_removed - dismantled the cassette. It will be called once
+            No argument.
 
-    Для нормальной работы требйутся вызывать метод tick с интервалом 0,3-0,5с (не строго).
+    For normal operation, you will need to call the tick method at intervals of 0.3-0.5c (not strictly).
     """
     def __init__(
             self,
@@ -394,8 +397,8 @@ class SmValidator:
         self.on_time = 0
         self.timeout = 0
 
-        self.amount = 0  # сумма к получению
-        self.current_amount = 0  # сколько набрал в текущем сеансе
+        self.amount = 0  # amount to receive
+        self.current_amount = 0  # how much scored in the current session
 
         self.callback_get_bills_done = callback_get_bills_done
         self.callback_timeout = callback_timeout
@@ -405,7 +408,7 @@ class SmValidator:
 
     def tick(self):
         """
-        Основной метод. Запрашивает состояние валидатора, вызвает соответствующий ему метод.
+        The basic method. Asks for validator status, ins throws out the appropriate method.
         """
         if self.active:
             if self.on_time + self.timeout < time.time():
@@ -418,16 +421,16 @@ class SmValidator:
 
         time.sleep(0.5)
 
-    # управляющие функции, вызывать из вне для начала/остановки процесса изъятия денег у населения
+    # management functions, call out out to start/stop the process of withdrawing money from the population
 
     def get_bills(self, amount: int, timeout: int = 120):
         """
-        Полуить денег. Кэш приемник переходит в активное состояние (купюроприемник горит зеленым), пребывает в нем
-        пока не получит указанную сумму или не превысит таймаут.
+        To get the money. The receiver's cash goes into active condition (the bill receiver burns green), stays in it
+        until it receives the specified amount or exceeds the timeout.
 
-        :param amount: сумма к получению
-        :param timeout: в течении какого времени пытаться получить
-        :return: False если уже в процессе получения, иначе True
+        :param amount: amount to receive
+        :param timeout: for how long to try to get
+        :return: False if you're already in the process of receiving, otherwise True
         """
         logger.info('Get bills, amount: %s, timeout: %s', amount, timeout)
         if self.active:
@@ -442,10 +445,10 @@ class SmValidator:
 
     def turn_off(self, force=False):
         """
-        Остановить процесс получения денег, внутренние переменные в дефолтные состояния.
-        Переходит в состояние ожидания (купюроприемник горит красным).
-        :param force: True - жестко ресетит, валидатор остановит внутренние процессы.
-        :return: Сумму, которую успел получить до остановки.
+        Stop the process of getting money, internal variables into default states.
+        Goes into a waiting state (the bill lights red).
+        :param force: True - rigidly resetite, validator will stop internal processes.
+        :return: The amount I managed to get before the stop.
         """
         result = self.current_amount
 
@@ -461,41 +464,41 @@ class SmValidator:
             self.validator.disable_bill_types()
         return result
 
-    # методы вызываемые автоматом, в зависимости от состояния валидатора
+    # methods called by the machine, depending on the validator state
     def on_power_up(self, response):
-        """включается"""
+        """Included"""
         self.validator.reset()
 
     def on_initialize(self, response):
-        """просто жду когда проинициализируется"""
+        """just waiting to get initiated"""
         pass
 
     def on_disabled(self, response):
-        """выключен, включаем!"""
+        """Off, turn it on!"""
         if self.cassette_removed:
             self.cassette_removed = False
         if self.active:
             self.validator.enable_bill_types()
 
     def on_idling(self, response):
-        """жду денег"""
+        """waiting for money"""
         pass
 
     def on_accepting(self, response):
-        """жду валидацию"""
+        """waiting for validation"""
         pass
 
     def on_escrow(self, response):
-        """банкнота определена, толкаем в кассету"""
+        """the banknote is defined, pushing it into the cassette"""
         self.validator.stack()
         logger.info('Accept bill: %s', self.validator.bill_table[response.data[-1]])
 
     def on_stacking(self, response):
-        """жду когда банкнота попадет в кассету"""
+        """I'm waiting for the banknote to hit the cassette """
         pass
 
     def on_stacked(self, response):
-        """банкнота в кассете"""
+        """banknote in cassette """
         bill_value = self.validator.bill_table[response.data[-1]]['amount']
 
         logger.info('Get bill: %s', bill_value)
@@ -507,22 +510,22 @@ class SmValidator:
             self.callback_get_bills_done(self.turn_off())
 
     def on_returned(self, response):
-        """банкнота возвращена"""
+        """banknote returned """
         logger.info('Returned bill: %s', self.validator.bill_table[response.data[-1]])
 
     def on_rejecting(self, response):
-        """банкнота не прошла валидацию"""
+        """the banknote did not pass validation """
         logger.warning('Rejected. Reason: %s', response.reason)
 
     def on_drop_cassette_removed(self, response):
-        """была вытащенная кассета"""
+        """the cassette was pulled out """
         if not self.cassette_removed:
             logger.warning('Cassette removed')
             self.callback_cassette_removed()
             self.cassette_removed = True
 
     def on_response_error(self, response):
-        """Ошибка в ответе валидатора (или его нет вообще)"""
+        """Error in the validator response (or none at all) """
         logger.warning('Bad response from device: %s', response.data)
         if response.data == [0]:
             logger.critical('Device unplugged')
