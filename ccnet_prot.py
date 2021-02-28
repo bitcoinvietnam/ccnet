@@ -278,7 +278,7 @@ class CashCodeSM:
     def get_bill_table(self):
         return self.send_cmd(self.command_class.get_cmd_get_bill_table())
 
-    def enable_bill_types(self, code='RUS'):
+    def enable_bill_types(self, code='VND'):
         """
         Include to pay, page. 20
         self.enabled_bill: list of banknote values, in rubles. For example: (50, 100, 500) Notes outside this list are accepted

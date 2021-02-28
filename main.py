@@ -16,8 +16,8 @@ from ccnet_prot import SmValidator
 if __name__ == '__main__':
 
     logger.info('Starting')
-    device = SmValidator(port='/dev/ttyS7')
-    device.get_bills(500)
+    device = SmValidator(enabled_bill=(500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000), port='/dev/ttyS7', baud_rate=9600, timeout=1)
+    device.get_bills(100000)
     logger.info('Init device done')
 
     try:
