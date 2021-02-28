@@ -46,17 +46,16 @@ class CashCodeNETCommand:
     DOWNLOAD = 0x50                             # not tested
     GET_CRC32_OF_THE_CODE = 0x51
     MODULE_DOWNLOAD = 0x52                      # not tested
-    VALIDATION_MODULE_IDENTIFICATION = 0x54     # not implemented
-    GET_CRC16_OF_THE_CODE = 0x56                # not implemented
-    GET_CRC32_OF_THE_CODE_WITH_PARAMETRS = 0x57 # not implemented
-    GET_CRC16_OF_THE_CODE_WITH_PARAMETRS = 0x58 # not implemented
-    SET_ESCROW_TIME_OUTS = 0x5A                 # not implemented
-    GET_COUNTER_OF_STACKED_BILL = 0x5B          # not implemented
-    GET_DATE_OF_THE_RELEASE = 0x5C              # not implemented
-    REQUEST_STATISTICS = 0x60                   # not implemented
-    SPECIAL_COMMANDS = 0x61                     # not implemented
-    SET_OPTIONS = 0x68                          # not implemented
-    GET_OPTIONS = 0x69                          # not implemented
+    VALIDATION_MODULE_IDENTIFICATION = 0x54     # not tested
+    GET_CRC16_OF_THE_CODE = 0x56                # not tested
+    GET_CRC32_OF_THE_CODE_WITH_PARAMETRS = 0x57 # not tested
+    GET_CRC16_OF_THE_CODE_WITH_PARAMETRS = 0x58 # not tested
+    SET_ESCROW_TIMEOUTS = 0x5A                  # not tested
+    GET_COUNTER_OF_STACKED_BILL = 0x5B          # not tested
+    GET_DATE_OF_THE_RELEASE = 0x5C              # not tested
+    REQUEST_STATISTICS = 0x60                   # not tested
+    SET_OPTIONS = 0x68                          # not tested
+    GET_OPTIONS = 0x69                          # not tested
     DIAGNOSTIC_SETTING = 0xF0                   # not implemented
 
 
@@ -174,8 +173,8 @@ class CashCodeNETCommand:
         """Message: settings the barcode format and number of characters, page 42
 
         :param data: 2 ints 1 byte long each
-            byte1 - bar code format. 01H = interleaved 2 of 5.
-            byte2 - number of characters (min 6, max 18).
+                      byte1 - bar code format. 01H = interleaved 2 of 5.
+                      byte2 - number of characters (min 6, max 18).
         
         """
         return cls().build_message(cls.SET_BARCODE_PARAMETERS, data)
@@ -206,6 +205,73 @@ class CashCodeNETCommand:
     def get_cmd_validation_module_identification(cls):
         """Message: Request identification information from banknote validation software module, page 44"""
         return cls().build_message(cls.VALIDATION_MODULE_IDENTIFICATION)
+
+    @classmethod
+    def get_cmd_get_CRC16_of_the_code(cls, data: tuple):
+        """Message: Request for Bill Validator’s firmware CRC16, page 44
+
+        :param data: seed 2 ints 1 byte long each, MSB first        
+        """
+        return cls().build_message(cls.GET_CRC16_OF_THE_CODE, data)
+
+    @classmethod
+    def get_cmd_get_CRC32_of_the_code_with_parameters(cls, data: tuple):
+        """Message:  Request for Bill Validator’s firmware CRC32, page 44
+
+        :param data: 8 ints 1 byte long each
+                        byte 1-4 seed, MSB first
+                        byte 5-8 start address, MSB first
+        """
+        return cls().build_message(cls.GET_CRC32_OF_THE_CODE_WITH_PARAMETRS, data)
+
+    @classmethod
+    def get_cmd_get_CRC16_of_the_code_with_parameters(cls, data: tuple):
+        """Message:  Request for Bill Validator’s firmware CRC16, page 44
+
+        :param data: 6 ints 1 byte long each
+                        byte 1-2 seed, MSB first
+                        byte 3-6 start address, MSB first
+        """
+        return cls().build_message(cls.GET_CRC16_OF_THE_CODE_WITH_PARAMETRS, data)
+
+    @classmethod
+    def get_cmd_set_escrow_timeouts(cls, data: tuple):
+        """Message:  Set escrow timeouts, page 45
+
+        :param data: 8 ints 1 byte long each
+                        byte 1-4 bill time-out in msec, MSB first
+                        byte 5-8 Voucher time-out in msec, MSB first
+        """
+        return cls().build_message(cls.SET_ESCROW_TIMEOUTS, data)
+
+    @classmethod
+    def get_cmd_get_counter_of_stacked_bills(cls):
+        """Message:  Get counter of stacked bills, page 45"""
+        return cls().build_message(cls.GET_COUNTER_OF_STACKED_BILL)
+
+    @classmethod
+    def get_cmd_get_date_of_the_release(cls):
+        """Message:  Get date of the firmware release, page 45"""
+        return cls().build_message(cls.GET_DATE_OF_THE_RELEASE)
+
+    @classmethod
+    def get_cmd_get_date_of_the_release(cls):
+        """Message:  Retrive full information about acceptance performance. See CCNET Document 3 for details"""
+        return cls().build_message(cls.REQUEST_STATISTICS)
+
+    @classmethod
+    def get_cmd_set_options(cls, data: tuple):
+        """Message:  Set various BV options, page 45
+        
+        :param data: 4 ints 1 byte long each
+                        byte 1-4 options
+        """
+        return cls().build_message(cls.SET_OPTIONS)
+
+    @classmethod
+    def get_cmd_get_date_of_the_release(cls):
+        """Message:  Get various BV options, page 46"""
+        return cls().build_message(cls.GET_OPTIONS)
 
 
 class CashCodeNETResponse:
@@ -488,7 +554,7 @@ class MsmValidator:
 
     def tick(self):
         """
-        The basic method. Asks for validator status, ins throws out the appropriate method.
+        The basic method. Asks for validator status, throws out the appropriate method.
         """
         if self.active:
             if self.on_time + self.timeout < time.time():
