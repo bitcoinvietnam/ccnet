@@ -391,7 +391,7 @@ class CashCodeNETResponse:
         )
 
 
-class CashCodeSM:
+class CashCodeMSM:
     """Team-pool class and protocol responses"""
     command_class = CashCodeNETCommand
     response_class = CashCodeNETResponse
@@ -533,7 +533,7 @@ class MsmValidator:
             country_code='VNM',
             *args, **kwargs):
 
-        self.validator = CashCodeSM(*args, **kwargs)
+        self.validator = CashCodeMSM(*args, **kwargs)
 
         self.cassette_removed = False
         self.active = False
