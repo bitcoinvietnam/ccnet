@@ -10,13 +10,13 @@ formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s  %(message)s')
 cons_handler.setFormatter(formatter)
 logger.addHandler(cons_handler)
 
-from ccnet_prot import SmValidator
+from ccnet_prot import MsmValidator
 
 
 if __name__ == '__main__':
 
     logger.info('Starting')
-    device = SmValidator(port='/dev/ttyS7', baud_rate=9600, timeout=1, country_code='VNM', enabled_bill=(500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000))
+    device = MsmValidator(port='/dev/ttyS7', baud_rate=9600, timeout=1, country_code='VNM', enabled_bill=(500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000))
     device.get_bills(100000)
     logger.info('Init device done')
 

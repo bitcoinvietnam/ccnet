@@ -26,19 +26,39 @@ class CashCodeNETCommand:
     """
     CCNET command class. Forms commands, there is a method for validation.
     """
-    SYNC = 0x02
-    ADR = 0x03
+    SYNC = 0x02                                 # always 0x02
+    ADR = 0x03                                  # 0x03 is validator
 
     # CMD:
     ACK = 0x00
     RESET = 0x30
+    GET_STATUS = 0x31                           # not tested
+    SET_SECURITY = 0x32                         # not tested
     POLL = 0x33
     ENABLE_BILL_TYPES = 0x34
     STACK = 0x35
+    RETURN = 0x36                               # not tested
     IDENTIFICATION = 0x37
+    HOLD = 0x38                                 # not tested
+    SET_BARCODE_PARAMETERS = 0x39               # not tested
+    EXTRACT_BARCODE_DATA = 0x3A                 # not tested
     GET_BILL_TABLE = 0x41
-    GET_CRC32 = 0x51
-    POWER_RECOVERY = 0x66
+    DOWNLOAD = 0x50                             # not tested
+    GET_CRC32_OF_THE_CODE = 0x51
+    MODULE_DOWNLOAD = 0x52                      # not tested
+    VALIDATION_MODULE_IDENTIFICATION = 0x54     # not implemented
+    GET_CRC16_OF_THE_CODE = 0x56                # not implemented
+    GET_CRC32_OF_THE_CODE_WITH_PARAMETRS = 0x57 # not implemented
+    GET_CRC16_OF_THE_CODE_WITH_PARAMETRS = 0x58 # not implemented
+    SET_ESCROW_TIME_OUTS = 0x5A                 # not implemented
+    GET_COUNTER_OF_STACKED_BILL = 0x5B          # not implemented
+    GET_DATE_OF_THE_RELEASE = 0x5C              # not implemented
+    REQUEST_STATISTICS = 0x60                   # not implemented
+    SPECIAL_COMMANDS = 0x61                     # not implemented
+    SET_OPTIONS = 0x68                          # not implemented
+    GET_OPTIONS = 0x69                          # not implemented
+    DIAGNOSTIC_SETTING = 0xF0                   # not implemented
+
 
     @lru_cache()
     def build_message(self, cmd: int, data: tuple = ()):
@@ -94,57 +114,109 @@ class CashCodeNETCommand:
 
     @classmethod
     def get_cmd_reset(cls):
-        """Message: reset the device, page. 17"""
+        """Message: reset the device, page 38"""
         return cls().build_message(cls.RESET)
 
     @classmethod
+    def get_cmd_get_status(cls):
+        """Message: Request for Bill Validator set-up status, page 38"""
+        return cls().build_message(cls.GET_STATUS)
+
+    @classmethod
+    def get_cmd_set_security(cls, data: tuple):
+        """Message: Sets Bill Validator Security Mode, page 38
+                :param data: 3 ints 1 byte long each
+        """
+        return cls().build_message(cls.SET_SECURITY, data)
+
+    @classmethod
     def get_cmd_poll(cls):
-        """Message: Device survey, page 3 18"""
+        """Message: Device survey, page 39"""
         return cls().build_message(cls.POLL)
 
     @classmethod
     def get_cmd_get_bill_table(cls):
-        """Message: request for accepted banknotes, p. 26"""
+        """Message: request for accepted banknotes, page 43"""
         return cls().build_message(cls.GET_BILL_TABLE)
 
     @classmethod
     def get_cmd_enable_bill_types(cls, data: tuple):
         """
-        Message: to allow/prohibit the type of banknotes accepted, p. 20 possible (those that returned the answer to the
+        Message: to allow/prohibit the type of banknotes accepted, page 41, possible (those that returned the answer to the
             GET_BILL_TABLE) 3 byte - turn on/off temporary storage of banknotes (escrow) 3 Bytes.
 
-        :param data: a motorcade of 6 ints 1 byte long each
+        :param data: 6 ints 1 byte long each
         """
         return cls().build_message(cls.ENABLE_BILL_TYPES, data)
 
     @classmethod
     def get_cmd_stack(cls):
-        """Message: send the banknote to the cassette (with escrow included), p. 21"""
+        """Message: send the banknote to the cassette (with escrow included), page 41"""
         return cls().build_message(cls.STACK)
 
     @classmethod
-    def get_cmd_power_recovery(cls):
-        """Message: Switch on, p. 26"""
-        return cls().build_message(cls.POWER_RECOVERY)
-
-    @classmethod
-    def get_cmd_get_CRC_32(cls):
-        """Message: get a firmware checklist, p. 25"""
-        return cls().build_message(cls.GET_CRC32)
+    def get_cmd_return(cls):
+        """Message: causes the Bill Validator to return bill in escrow position to the customer, page 41"""
+        return cls().build_message(cls.RETURN)
 
     @classmethod
     def get_cmd_identification(cls):
-        """Message: Get information about the device, p. 21"""
+        """Message: Get information about the device, page 42"""
         return cls().build_message(cls.IDENTIFICATION)
+
+    @classmethod
+    def get_cmd_hold(cls):
+        """Message: holding of Bill Validator in Escrow state, page 42"""
+        return cls().build_message(cls.HOLD)
+
+    @classmethod
+    def get_cmd_set_barcode_parameters(cls, data: tuple):
+        """Message: settings the barcode format and number of characters, page 42
+
+        :param data: 2 ints 1 byte long each
+            byte1 - bar code format. 01H = interleaved 2 of 5.
+            byte2 - number of characters (min 6, max 18).
+        
+        """
+        return cls().build_message(cls.SET_BARCODE_PARAMETERS, data)
+
+    @classmethod
+    def get_cmd_extract_barcode_data(cls):
+        """Message:  retrieving barcode data if barcode coupon is found. If this command is sent when
+           barcode coupon is not found the Bill Validator returns ILLEGAL COMMAND respons, page 43
+        """
+        return cls().build_message(cls.EXTRACT_BARCODE_DATA)
+
+    @classmethod
+    def get_cmd_download(cls):
+        """Message: transition to download mode, page 43"""
+        return cls().build_message(cls.DOWNLOAD)
+
+    @classmethod
+    def get_cmd_module_download(cls):
+        """Message: transition to download mode, see CCNET Document 2"""
+        return cls().build_message(cls.MODULE_DOWNLOAD)
+
+    @classmethod
+    def get_cmd_get_CRC32_of_the_code(cls):
+        """Message: get a firmware checklist, page 44"""
+        return cls().build_message(cls.GET_CRC32_OF_THE_CODE)
+
+    @classmethod
+    def get_cmd_validation_module_identification(cls):
+        """Message: Request identification information from banknote validation software module, page 44"""
+        return cls().build_message(cls.VALIDATION_MODULE_IDENTIFICATION)
 
 
 class CashCodeNETResponse:
     """
     Protocol Response Class CCNET.
     """
-    poll_states = {  # page 19
+    poll_states = {  # page 39
         0x0: 'response_error',
         0x10: 'power_up',
+        0x11: 'power_up_with_bill_in_validator',
+        0x12: 'power_up_with_bill_in_stacker',
         0x13: 'initialize',
         0x14: 'idling',
         0x15: 'accepting',
@@ -154,8 +226,6 @@ class CashCodeNETResponse:
         0x1A: 'holding',
         0x1B: 'busy',
         0x1C: 'rejecting',
-        0x1D: 'dispensing',
-        0x1E: 'unloading',
         0x21: 'setting_type_cassette',
         0x25: 'dispensed',
         0x26: 'unloaded',
@@ -167,23 +237,33 @@ class CashCodeNETResponse:
         0x43: 'jam_in_acceptor',
         0x44: 'jam_in_stacker',
         0x45: 'cheated',
+        0x45: 'pause',
         0x47: 'error',
         0x80: 'escrow',
         0x81: 'stacked',
-        0x82: 'returned'
+        0x82: 'returned',
+        0x84: 'suspected_bill_detected',
+        0x90: 'counterfit_held_in_validator'
     }
 
-    reject_reason = {  # p.19
+    reject_reason = {  # page 39
         0x60: 'Rejecting due to Insertion. Insertion error',
-        0x61: 'Rejecting due to Magnetic. Magnetic error',
+        0x61: 'Rejecting due to Magnetic. Dielectric error',
         0x62: 'Rejecting due to bill Remaining in the head. Bill remains in the head, and new bill is rejected',
         0x63: 'Rejecting due to Multiplying. Compensation error/multiplying factor error',
-        0x64: 'Rejecting due to Conveying. Conveying error',
-        0x65: 'Rejecting due to Identification1. Identification error',
+        0x64: 'Rejecting due to Conveying. Bill transport error',
+        0x65: 'Rejecting due to Identification. Identification error',
         0x66: 'Rejecting due to Verification. Verification error',
-        0x67: 'Rejecting due to Optic. Optic error',
+        0x67: 'Rejecting due to Optic. Optic Sensor error',
         0x68: 'Rejecting due to Inhibit. Returning by inhibit denomination error.',
+        0x69: 'Rejecting due to Capacity. Capacitance error',
+        0x6A: 'Rejecting due to Operation. Operation error',
         0x6C: 'Rejecting due to Length. Length error',
+        0x6D: 'Rejecting due to UV. Banknote UV properties do not meet the predefined criteria',
+        0x92: 'Rejecting due to Unrecognized barcode. Bill taken was treated as a barcode but no reliable data can be read from it.',
+        0x93: 'Rejecting due to incorrect number of characters in barcode. Barcode data was read (at list partially) but is inconsistent.',
+        0x94: 'Rejecting due to unknown barcode start sequence. Barcode was not read as no synchronization was established.',
+        0x95: 'Rejecting due to unknown barcode stop sequence. Barcode was read but trailing data is corrupt.',
     }
 
     response = namedtuple('Response', ['state', 'data', 'reason'])  # it brings back get_poll
@@ -202,7 +282,7 @@ class CashCodeNETResponse:
     @classmethod
     def get_bill_table(cls, response: bytes):
         """
-        Parsit's response GET BILL TABLE (0x41, Page. 26)
+        Parsit's response GET BILL TABLE (0x41, Page. 43)
         :param response: answer, in bytes
         :return: list of dictionaries with the value of the accepted bill and its country code. List length 24, when included/
             turning off the types of accepted, when specifying which banknote is identified, the index is transferred from that list
@@ -227,7 +307,7 @@ class CashCodeNETResponse:
     @classmethod
     def get_poll(cls, response: bytes):
         """
-         Parsit's response POLL (0x33, Page. 18)
+         Parsit's response POLL (0x33, Page. 39)
          :param response: answer, in bytes
          :return: self.response:
             state: State of the device. Uses self.poll_states
@@ -256,11 +336,11 @@ class CashCodeSM:
         :param port: COM port to which the device is connected
         :param timeout: Time to wait for a response from the device
 
-        Connectivity options (Page.9):
+        Connectivity options (Page 8):
             Speed: 9600/19200, selected on the device,
             Start Bit: 1,
             Word size: 8 Bit, 0 bit is transmitted first,
-            Parity: Not checked,
+            Parity: None,
             stop bit: 1.
         """
         self.serial = serial.Serial(port=port, baudrate=baud_rate, timeout=timeout, writeTimeout=timeout,
@@ -280,7 +360,7 @@ class CashCodeSM:
 
     def enable_bill_types(self, country_code):
         """
-        Include to pay, page. 20
+        Include to pay, page 20
         self.enabled_bill: list of banknote values, in rubles. For example: (50, 100, 500) Notes outside this list are accepted
             will not, even if they are recognized.
         self.bill_table: list of bills from the validator firmware. Length Strictly 24!
@@ -312,11 +392,8 @@ class CashCodeSM:
         """Reset. The device will complete the operation and restart"""
         return self.send_cmd(self.command_class.get_cmd_reset(), confirmation=False)
 
-    def power_recovery(self):
-        return self.send_cmd(self.command_class.get_cmd_power_recovery(), confirmation=False)
-
-    def get_crc32(self):
-        return self.send_cmd(self.command_class.get_cmd_get_CRC_32(), confirmation=False)
+    def get_crc32_of_the_code(self):
+        return self.send_cmd(self.command_class.get_cmd_get_CRC32_of_the_code(), confirmation=False)
 
     def send_cmd(self, command: tuple, confirmation=True) -> bytes:
         """
@@ -356,7 +433,7 @@ class CashCodeSM:
         return response
 
 
-class SmValidator:
+class MsmValidator:
     """
     Class to work with validator by protocols CCNET.
     It has two methods to control:
