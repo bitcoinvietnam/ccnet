@@ -250,7 +250,7 @@ class CashCodeSM:
     command_class = CashCodeNETCommand
     response_class = CashCodeNETResponse
 
-    def __init__(self, enabled_bill=(), port='/dev/ttyUSB0', baud_rate=9600, timeout=1):
+    def __init__(self, port, baud_rate=9600, timeout=1, enabled_bill=()):
         """
         :param enabled_bill: banknotes, such as banknotes: (100, 200, 1000)
         :param port: COM port to which the device is connected
@@ -278,7 +278,7 @@ class CashCodeSM:
     def get_bill_table(self):
         return self.send_cmd(self.command_class.get_cmd_get_bill_table())
 
-    def enable_bill_types(self, code='VND'):
+    def enable_bill_types(self, country_code):
         """
         Include to pay, page. 20
         self.enabled_bill: list of banknote values, in rubles. For example: (50, 100, 500) Notes outside this list are accepted
@@ -293,7 +293,7 @@ class CashCodeSM:
             current_type = self.bill_table[bit_num]
             current_type_code = current_type.get('code')
             current_type_amount = current_type.get('amount')
-            if current_type_code == code and current_type_amount in self.enabled_bill:
+            if current_type_code == country_code and current_type_amount in self.enabled_bill:
                 enable_types += 1 << bit_num
 
         result = [int(i) for i in enable_types.to_bytes(3, byteorder='big')] + escrow_enable
@@ -387,6 +387,7 @@ class SmValidator:
             callback_bill_stacked=print,
             callback_cassette_removed=print,
             callback_device_removed=print,
+            country_code='VNM',
             *args, **kwargs):
 
         self.validator = CashCodeSM(*args, **kwargs)
@@ -399,6 +400,8 @@ class SmValidator:
 
         self.amount = 0  # amount to receive
         self.current_amount = 0  # how much scored in the current session
+        
+        self.country_code = coutry_code
 
         self.callback_get_bills_done = callback_get_bills_done
         self.callback_timeout = callback_timeout
@@ -478,7 +481,7 @@ class SmValidator:
         if self.cassette_removed:
             self.cassette_removed = False
         if self.active:
-            self.validator.enable_bill_types()
+            self.validator.enable_bill_types(country_code=self.country_code)
 
     def on_idling(self, response):
         """waiting for money"""
