@@ -401,7 +401,7 @@ class SmValidator:
         self.amount = 0  # amount to receive
         self.current_amount = 0  # how much scored in the current session
         
-        self.country_code = coutry_code
+        self.country_code = country_code
 
         self.callback_get_bills_done = callback_get_bills_done
         self.callback_timeout = callback_timeout
