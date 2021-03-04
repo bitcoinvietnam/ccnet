@@ -26,38 +26,37 @@ class CashCodeNETCommand:
     """
     CCNET command class. Forms commands, there is a method for validation.
     """
-    SYNC = 0x02                                 # always 0x02
-    ADR = 0x03                                  # 0x03 is validator
+    SYNC = 0x02                                  # always 0x02
+    ADR = 0x03                                   # 0x03 is validator
 
     # CMD:
     ACK = 0x00
     RESET = 0x30
-    GET_STATUS = 0x31                           # not tested
-    SET_SECURITY = 0x32                         # not tested
+    GET_STATUS = 0x31                            # not tested
+    SET_SECURITY = 0x32                          # not tested
     POLL = 0x33
     ENABLE_BILL_TYPES = 0x34
     STACK = 0x35
-    RETURN = 0x36                               # not tested
+    RETURN = 0x36                                # not tested
     IDENTIFICATION = 0x37
-    HOLD = 0x38                                 # not tested
-    SET_BARCODE_PARAMETERS = 0x39               # not tested
-    EXTRACT_BARCODE_DATA = 0x3A                 # not tested
+    HOLD = 0x38                                  # not tested
+    SET_BARCODE_PARAMETERS = 0x39                # not tested
+    EXTRACT_BARCODE_DATA = 0x3A                  # not tested
     GET_BILL_TABLE = 0x41
-    DOWNLOAD = 0x50                             # not tested
+    DOWNLOAD = 0x50                              # not tested
     GET_CRC32_OF_THE_CODE = 0x51
-    MODULE_DOWNLOAD = 0x52                      # not tested
-    VALIDATION_MODULE_IDENTIFICATION = 0x54     # not tested
-    GET_CRC16_OF_THE_CODE = 0x56                # not tested
-    GET_CRC32_OF_THE_CODE_WITH_PARAMETRS = 0x57 # not tested
-    GET_CRC16_OF_THE_CODE_WITH_PARAMETRS = 0x58 # not tested
-    SET_ESCROW_TIMEOUTS = 0x5A                  # not tested
-    GET_COUNTER_OF_STACKED_BILL = 0x5B          # not tested
-    GET_DATE_OF_THE_RELEASE = 0x5C              # not tested
-    REQUEST_STATISTICS = 0x60                   # not tested
-    SET_OPTIONS = 0x68                          # not tested
-    GET_OPTIONS = 0x69                          # not tested
-    DIAGNOSTIC_SETTING = 0xF0                   # not implemented
-
+    MODULE_DOWNLOAD = 0x52                       # not tested
+    VALIDATION_MODULE_IDENTIFICATION = 0x54      # not tested
+    GET_CRC16_OF_THE_CODE = 0x56                 # not tested
+    GET_CRC32_OF_THE_CODE_WITH_PARAMETRS = 0x57  # not tested
+    GET_CRC16_OF_THE_CODE_WITH_PARAMETRS = 0x58  # not tested
+    SET_ESCROW_TIMEOUTS = 0x5A                   # not tested
+    GET_COUNTER_OF_STACKED_BILL = 0x5B           # not tested
+    GET_DATE_OF_THE_RELEASE = 0x5C               # not tested
+    REQUEST_STATISTICS = 0x60                    # not tested
+    SET_OPTIONS = 0x68                           # not tested
+    GET_OPTIONS = 0x69                           # not tested
+    DIAGNOSTIC_SETTING = 0xF0                    # not implemented
 
     @lru_cache()
     def build_message(self, cmd: int, data: tuple = ()):
@@ -80,7 +79,7 @@ class CashCodeNETCommand:
         :return: message built right - True, Otherwise, - False
         """
         result = message[0] == cls.SYNC and message[1] == cls.ADR and message[2] == len(message) and \
-               message[-2:] == bytes(cls.get_crc(tuple(message[:-2])))
+            message[-2:] == bytes(cls.get_crc(tuple(message[:-2])))
         if not result:
             logger.error('Bad message on validate: %s', [hex(i) for i in message])
 
@@ -303,7 +302,7 @@ class CashCodeNETResponse:
         0x43: 'jam_in_acceptor',
         0x44: 'jam_in_stacker',
         0x45: 'cheated',
-        0x45: 'pause',
+        0x46: 'pause',
         0x47: 'error',
         0x80: 'escrow',
         0x81: 'stacked',
@@ -427,12 +426,10 @@ class CashCodeMSM:
     def enable_bill_types(self, country_code):
         """
         Include to pay, page 20
-        self.enabled_bill: list of banknote values, in rubles. For example: (50, 100, 500) Notes outside this list are accepted
-            will not, even if they are recognized.
+        self.enabled_bill: list of banknote values, in rubles. For example: (50, 100, 500) Notes outside this list are not accepted, even if they are recognized.
         self.bill_table: list of bills from the validator firmware. Length Strictly 24!
         """
         self.bill_table = self.response_class.get_bill_table(self.get_bill_table())
-        escrow_enable = [0x00, 0x00, 0x00]  # I turn off the escrow, the bills go straight into the cassette
 
         enable_types = 0
         for bit_num in range(3 * 8):
@@ -442,7 +439,12 @@ class CashCodeMSM:
             if current_type_code == country_code and current_type_amount in self.enabled_bill:
                 enable_types += 1 << bit_num
 
-        result = [int(i) for i in enable_types.to_bytes(3, byteorder='big')] + escrow_enable
+        bills_enable = [int(i) for i in enable_types.to_bytes(3, byteorder='big')]
+        escrow_enable = [int(i) for i in enable_types.to_bytes(3, byteorder='big')]     # enable escrow for all bill types
+        
+        # escrow_enable = [0x00, 0x00, 0x00]  # I turn off the escrow, the bills go straight into the cassette
+    
+        result = bills_enable + escrow_enable
 
         return self.send_cmd(self.command_class.get_cmd_enable_bill_types(tuple(result)))
 
