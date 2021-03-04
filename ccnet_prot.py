@@ -539,6 +539,7 @@ class MsmValidator:
 
         self.cassette_removed = False
         self.active = False
+        self.process_completed = False      # false until a power_off() has been called
 
         self.on_time = 0
         self.timeout = 0
@@ -595,12 +596,13 @@ class MsmValidator:
         """
         Stop the process of getting money, internal variables into default states.
         Goes into a waiting state (the bill lights red).
-        :param force: True - rigidly resetite, validator will stop internal processes.
+        :param force: True - rigidly reset, validator will stop internal processes.
         :return: The amount I managed to get before the stop.
         """
         result = self.current_amount
 
         self.active = False
+        self.process_completed = True
         self.amount = 0
         self.on_time = 0
         self.timeout = 0
