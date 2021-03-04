@@ -495,7 +495,7 @@ class CashCodeMSM:
         response = first_three + other
 
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Get response: %s', [hex(i) for i in response])
+            logger.debug('Got response: %s', [hex(i) for i in response])
         return response
 
 
